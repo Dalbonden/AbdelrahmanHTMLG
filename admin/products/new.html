@@ -1,0 +1,48 @@
+<!DOCTYPE html>
+<html lang="sv">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Ny Produkt</title>
+  <link rel="stylesheet" href="admin.css" />
+</head>
+<body>
+  <div class="container">
+    <aside class="sidebar">
+      <h1>Administration</h1>
+      <nav>
+        <ul>
+          <li><a href="products.html">Produkter</a></li>
+          <li><a href="index.html">Tillbaka till butiken</a></li>
+        </ul>
+      </nav>
+    </aside>
+
+    <main class="main-content">
+      <h2>Lägg till ny produkt</h2>
+      <form>
+        <label for="name">Namn</label>
+        <input type="text" id="name" />
+
+        <label for="description">Beskrivning</label>
+        <textarea id="description" rows="5"></textarea>
+
+        <label for="image">Bild</label>
+        <input type="file" id="image" />
+
+        <label for="sku">SKU</label>
+        <input type="text" id="sku" />
+
+        <label for="price">Pris</label>
+        <input type="number" id="price" />
+
+        <button type="submit">Lägg till</button>
+      </form>
+    </main>
+  </div>
+
+  <footer class="footer-bottom">
+    © Freaky Fashion
+  </footer>
+</body>
+</html>

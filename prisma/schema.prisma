@@ -1,0 +1,117 @@
+// Prisma-schema för e-handelsplattformen.
+// Designat för att vara skalbart: produkter, kategorier, användare,
+// varukorgar och ordrar med tydliga relationer.
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+enum Role {
+  CUSTOMER
+  ADMIN
+}
+
+enum OrderStatus {
+  PENDING      // skapad, ej betald
+  PAID         // betalning bekräftad
+  FULFILLED    // skickad/levererad
+  CANCELLED
+  REFUNDED
+}
+
+model User {
+  id           String     @id @default(cuid())
+  email        String     @unique
+  name         String?
+  passwordHash String
+  role         Role       @default(CUSTOMER)
+  // Krypterad känslig data (AES-256-GCM), t.ex. telefonnummer/adress.
+  encryptedPhone String?
+  cart         CartItem[]
+  orders       Order[]
+  createdAt    DateTime   @default(now())
+  updatedAt    DateTime   @updatedAt
+}
+
+model Category {
+  id       String    @id @default(cuid())
+  name     String    @unique
+  slug     String    @unique
+  products Product[]
+}
+
+model Product {
+  id          String      @id @default(cuid())
+  name        String
+  slug        String      @unique
+  description String
+  // Pris i ören (heltal) för att undvika flyttalsfel.
+  priceCents  Int
+  currency    String      @default("SEK")
+  brand       String?
+  imageUrl    String
+  stock       Int         @default(0)
+  active      Boolean     @default(true)
+  categoryId  String?
+  category    Category?   @relation(fields: [categoryId], references: [id])
+  cartItems   CartItem[]
+  orderItems  OrderItem[]
+  createdAt   DateTime    @default(now())
+  updatedAt   DateTime    @updatedAt
+
+  @@index([categoryId])
+  @@index([active])
+}
+
+model CartItem {
+  id        String   @id @default(cuid())
+  userId    String
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  productId String
+  product   Product  @relation(fields: [productId], references: [id], onDelete: Cascade)
+  quantity  Int      @default(1)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@unique([userId, productId])
+  @@index([userId])
+}
+
+model Order {
+  id              String      @id @default(cuid())
+  userId          String
+  user            User        @relation(fields: [userId], references: [id])
+  status          OrderStatus @default(PENDING)
+  totalCents      Int
+  currency        String      @default("SEK")
+  // Stripe-referenser för spårbarhet och webhook-avstämning.
+  stripeSessionId String?     @unique
+  stripePaymentId String?
+  // Krypterad leveransadress (AES-256-GCM).
+  encryptedShipping String?
+  items           OrderItem[]
+  createdAt       DateTime    @default(now())
+  updatedAt       DateTime    @updatedAt
+
+  @@index([userId])
+  @@index([status])
+}
+
+model OrderItem {
+  id            String  @id @default(cuid())
+  orderId       String
+  order         Order   @relation(fields: [orderId], references: [id], onDelete: Cascade)
+  productId     String
+  product       Product @relation(fields: [productId], references: [id])
+  // Snapshot av namn/pris vid köptillfället (priser kan ändras senare).
+  nameSnapshot  String
+  priceCents    Int
+  quantity      Int
+
+  @@index([orderId])
+}

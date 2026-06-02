@@ -1,160 +1,154 @@
 # PROJECT_STATE.md — Shopen e-handelsplattform
 
-> Uppdaterat: 2026-05-30  
-> Branch: `claude/stoic-volta-kobAt`  
-> Senaste commit: `f2f6576` — "Fas 1: Fundament för skalbar e-handel"
+> Uppdaterat: 2026-05-30
+> Branch: `claude/stoic-volta-kobAt`
+> Lokala commits (EJ pushade): `f2f6576` (Fas 1), `d0819d9` (PROJECT_STATE)
 
 ---
 
-## Vad projektet är
+## Hur du startar en ny session
 
-En skalbar e-handelsplattform ("som Amazon") byggd med **Next.js 15 (App Router)**, **TypeScript**, **Tailwind CSS**, **Prisma + Postgres** och **Stripe** för betalningar. Neutralt webbshop-tema på svenska.
-
-Projektet startade som en **statisk HTML/CSS-prototyp** (klädmärket "Freaky Fashion"). Prototypen finns kvar i `public/legacy/` som referens men är inte aktiv.
-
-**Kunden/ägaren:** Abdelrahman (via Dalbonden på GitHub)  
-**Repo:** `Dalbonden/AbdelrahmanHTMLG`
+1. Peka Claude Code mot detta repo.
+2. Säg: **"Läs PROJECT_STATE.md först, fortsätt sedan därifrån."**
+3. Standardnästa steg är **Fas 2 (Produktkatalog)** — se längst ned.
 
 ---
 
-## Arkitektur och teknikval
+## Vad detta projekt är
 
-| Lager      | Teknik                                      | Varför                                     |
-|------------|---------------------------------------------|--------------------------------------------|
-| Frontend   | Next.js 15 App Router, React 19, TypeScript | SEO, server components, skalbarhet         |
-| Styling    | Tailwind CSS                                | Snabb, konsistent, mobilfirst              |
-| Databas    | Postgres via Prisma ORM                     | Relationsdata, typsäkert schema             |
-| Auth       | NextAuth v4 (EJ implementerat än)           | Inbyggt i Next.js-ekosystemet              |
-| Betalning  | Stripe (EJ implementerat än)                | PCI-DSS-vänligt, Klarna-kompatibelt        |
-| Kryptering | AES-256-GCM (`lib/crypto.ts`)               | Känslig data i vila (adress, telefon)      |
+En **skalbar e-handelsplattform** ("som Amazon") på svenska. Byggd från grunden
+med **Next.js 15 (App Router) + TypeScript + Tailwind + Prisma/Postgres + Stripe**.
 
-**Viktiga designbeslut:**
-- Priser lagras i **ören (heltal)** — undviker flyttalsfel
-- Kortdata rör **aldrig** vår server — allt via Stripe (PCI-DSS)
-- AES-256-GCM används för känsliga personuppgifter, INTE kortdata
-- `.env` gitignoreras alltid — `.env.example` dokumenterar alla nycklar
+Projektet startade som en statisk HTML/CSS-prototyp (klädmärket "Freaky Fashion").
+Den gamla prototypen ligger kvar i `public/legacy/` som referens — den är **inte**
+den aktiva appen.
 
----
+**Tema:** Neutral webbshop (valt av ägaren). **Språk:** Allt på svenska.
+**Ägare/repo:** `Dalbonden/AbdelrahmanHTMLG`.
 
-## Fas-plan (godkänd av användaren)
-
-| Fas | Status | Innehåll |
-|-----|--------|----------|
-| **Fas 0 – Audit** | ✅ Klar | Kartlade befintlig kodbas, identifierade att det bara var HTML/CSS-prototyp |
-| **Fas 1 – Fundament** | ✅ Klar (ej pushad) | Stack, schema, lib-helpers, startsida, komponenter |
-| **Fas 2 – Produktkatalog** | ⏳ Nästa | `/produkter`, `/produkt/[slug]`, sök, kategorier, admin CRUD |
-| **Fas 3 – Varukorg & konton** | ⏳ Väntar | Persistent varukorg, registrering/login, NextAuth |
-| **Fas 4 – Kassa & betalning** | ⏳ Väntar | Stripe Checkout, ordrar, kvitton, webhooks |
-| **Fas 5 – Säkerhet & härdning** | ⏳ Väntar | Rate limiting, input-validering, säkerhetsgenomgång |
-| **Fas 6 – Deployment** | ⏳ Väntar | Hosting, CI/CD, produktions-checklista |
+> OBS: Den ursprungliga uppdragsbeskrivningen nämnde "hårsalong med React-backend
+> och bokningsflöde". Det stämde INTE med verkligheten — repot var bara statisk
+> HTML utan backend. Vi bygger e-handel enligt ägarens senare beslut, inte salong.
 
 ---
 
-## Vad som är klart (Fas 1)
+## Current frontend status
 
-### Filer skapade
+✅ **Fungerar (Fas 1 klar):**
+- Next.js App Router uppsatt, `npm run build` grön, `tsc --noEmit` grön.
+- Root layout (`app/layout.tsx`) med header + footer.
+- Startsida (`app/page.tsx`) — databasdriven, visar populära produkter, har
+  vänligt tomläge om DB saknas (kraschar inte).
+- Återanvändbara komponenter: `SiteHeader`, `SiteFooter`, `ProductCard`.
+- Responsiv design (mobilfirst, Tailwind).
+
+⏳ **Finns ännu inte (länkar i header/footer pekar dit men sidorna saknas):**
+- `/produkter`, `/produkt/[slug]`, `/kategori/[slug]`, `/sok`, `/varukorg`, `/konto`.
+
+## Current backend status
+
+✅ **Fungerar:**
+- Prisma-schema komplett (`prisma/schema.prisma`): User, Category, Product,
+  CartItem, Order, OrderItem + enums Role/OrderStatus.
+- Singleton Prisma-klient (`lib/prisma.ts`).
+- Seed-skript (`prisma/seed.ts`) — 4 produkter, 2 kategorier, dev-admin.
+- Hjälpbibliotek: `lib/money.ts` (pris i ören), `lib/crypto.ts` (AES-256-GCM).
+
+⏳ **Finns ännu inte:**
+- Inga API-routes/route handlers ännu.
+- Ingen autentisering kopplad (NextAuth är installerat men ej konfigurerat).
+- Ingen Stripe-integration ännu (paketet finns i package.json).
+- **Ingen databas är ansluten** — `DATABASE_URL` är inte satt. Appen bygger ändå
+  tack vare felhanteringen, men visar tomläge tills DB kopplas.
+
+## Admin panel status
+
+⏳ **Inte byggd i nya appen ännu.** Den gamla statiska admin-prototypen finns i
+`public/legacy/` (admin.html, admin/products/...) men är inte kopplad till något.
+Riktig admin (skyddad av ADMIN-roll, sparar till DB) planeras i Fas 2.
+
+## Booking/contact flow status
+
+❌ **Finns inte, och planeras inte** (detta är e-handel, inte salong). Om bokning/
+kontakt ska finnas måste det beslutas separat med ägaren.
+
+---
+
+## Security fixes already done
+
+Detta är ett nytt bygge, så "fixar" = inbyggda säkerhetsprinciper från start:
+- **Kortdata rör aldrig servern** — designat för Stripe (PCI-DSS-vänligt).
+- **`.gitignore` skyddar `.env`** — bara `.env.example` (utan hemligheter) committas.
+- **AES-256-GCM** (`lib/crypto.ts`) för känslig persondata i vila — med tydlig
+  kommentar att det ALDRIG används för kortuppgifter.
+- **Lösenord** hashas med bcryptjs (cost 12) i seed — mönster för framtida auth.
+- **Priser i ören (heltal)** — undviker flyttalsfel i pengar.
+
+## Bugs already fixed
+
+- **Build-krasch när DB saknas:** Startsidan kastade fel utan `DATABASE_URL`.
+  Fixat genom `getPopularProducts()` med try/catch som returnerar tomläge.
+- **ESLint `prefer-const`:** Refaktorerade startsidans datahämtning till en
+  separat funktion så build/lint blev grön.
+
+## Known remaining issues
+
+- **Push blockerad:** `git push` → 403 (git-proxy read-only). GitHub MCP API →
+  403 "Resource not accessible by integration". **Ägaren måste ge sessionen
+  Contents: Read & write** mot repot. 2 commits väntar lokalt.
+- **npm-sårbarheter:** 4 rapporterade vid install (3 moderate, 1 critical) —
+  bör granskas/åtgärdas i Fas 5 (`npm audit`).
+- **Ingen databas ansluten** — butiken är tom tills `DATABASE_URL` sätts + seed körs.
+- **Döda länkar** i header/footer tills Fas 2-sidorna byggs.
+
+---
+
+## Files/folders that matter most
+
 ```
-package.json              # Next.js 15, Prisma, Stripe, NextAuth, bcryptjs, zod
-tsconfig.json
-next.config.ts
-tailwind.config.ts
-postcss.config.mjs
-next-env.d.ts
-.gitignore                # .env skyddas
-.env.example              # Mall för alla miljövariabler
-
-prisma/schema.prisma      # Models: User, Category, Product, CartItem, Order, OrderItem
-prisma/seed.ts            # 4 produkter, 2 kategorier, dev-adminkonto
-
-lib/prisma.ts             # Singleton Prisma-klient
+app/page.tsx              # Startsida (databasdriven, tomläge-säker)
+app/layout.tsx            # Root layout
+components/                # SiteHeader, SiteFooter, ProductCard (återanvändbara)
+lib/prisma.ts             # DB-klient (singleton)
 lib/money.ts              # formatPrice() — ören → "199 kr"
-lib/crypto.ts             # encrypt()/decrypt() AES-256-GCM
-
-app/globals.css           # Tailwind base
-app/layout.tsx            # Root layout med SiteHeader + SiteFooter
-app/page.tsx              # Startsida, hämtar produkter från DB, vänligt tomläge om DB saknas
-
-components/SiteHeader.tsx # Header med logotyp, sök, nav
-components/SiteFooter.tsx # Footer med kategorier, mina sidor, trygghet
-components/ProductCard.tsx # Återanvändbart produktkort
-
-public/tshirt.jpg         # Produktbild (från prototypen)
-public/freakshirt.jpg     # Produktbild
-public/fived.jpg          # Bannerbild
-public/legacy/            # Original HTML/CSS-prototyp (referens)
-README.md                 # Dokumentation för uppsättning och säkerhet
+lib/crypto.ts             # AES-256-GCM (känslig data, ALDRIG kort)
+prisma/schema.prisma      # Hela datamodellen — START HÄR vid datafrågor
+prisma/seed.ts            # Demodata + dev-admin
+.env.example              # Alla miljövariabler som krävs
+package.json              # Scripts: dev, build, db:push, db:seed
+public/legacy/            # Gammal HTML-prototyp (referens, ej aktiv)
+README.md                 # Uppsättningsinstruktioner
 ```
 
-### Verifierat
-- `npm run build` → ✅ grön (Prisma-felet i build-loggen är väntat/ofarligt utan DB)
-- `npx tsc --noEmit` → ✅ inga TypeScript-fel
-- 4 npm-sårbarheter rapporterades (3 moderate, 1 critical) — dessa bör åtgärdas med `npm audit fix` i Fas 5
+## Important instructions for future Claude sessions
 
----
+- **Arbetssätt:** Förstå först, förklara plan innan kodändring, skydda det som
+  fungerar, var ärlig om risker. Allt UI-språk på **svenska**.
+- **Pris alltid i ören (heltal)** — använd `formatPrice()` vid visning.
+- **Kortbetalning endast via Stripe** — lagra/kryptera aldrig kortdata själv.
+- **Validera all input** i API-routes med zod. Admin-routes: kontrollera
+  `role === "ADMIN"` på servern.
+- **Hemligheter** bara i `.env` (gitignored), aldrig i kod eller commits.
+- Kör `npm run build` + `tsc --noEmit` innan något kallas klart.
 
-## Känt problem: Push blockerad
+## What should NOT be changed without my approval
 
-**Symptom:** `git push` ger `403 Permission to Dalbonden/AbdelrahmanHTMLG.git denied`  
-**Orsak:** Miljöns git-proxy kör i läs-bara-läge. GitHub-API:t (MCP) nekar också skrivning.  
-**Commit som väntar:** `f2f6576` på `claude/stoic-volta-kobAt`  
-**Lösning:** Ägaren måste ge sessionen/GitHub-appen **Contents: Read & write** mot repot.  
-**Docs:** https://code.claude.com/docs/en/claude-code-on-the-web
+- **Datamodellen** (`prisma/schema.prisma`) — ändra inte fält/relationer utan godkännande.
+- **Säkerhetsval:** Stripe för betalning, bcrypt för lösenord, AES för persondata.
+- **Stacken** (Next.js/Prisma/Postgres/Stripe) — byt inte utan beslut.
+- **`public/legacy/`** — radera inte; det är referensmaterial.
+- **Temat** (neutral webbshop) — gör inte om till annat tema utan godkännande.
 
----
+## Next recommended steps (Fas 2 – Produktkatalog)
 
-## Miljövariabler som krävs
+1. Anslut en Postgres-DB (Neon/Supabase/Vercel), sätt `DATABASE_URL`,
+   kör `npm run db:push` + `npm run db:seed`.
+2. Bygg `/produkter` (lista + filter), `/produkt/[slug]` (detalj),
+   `/kategori/[slug]`, `/sok?q=`.
+3. Bygg admin-CRUD `/admin/produkter` (skyddad av ADMIN-roll).
+4. API-routes: `GET /api/products`, `POST/PATCH /api/admin/products`.
+5. Nya komponenter: `ProductGrid`, `ProductFilter`, `SearchResults`,
+   `AdminProductForm`, `AddToCartButton`.
 
-Se `.env.example` för fullständig mall. Kritiska:
-
-```bash
-DATABASE_URL              # Postgres-anslutning (t.ex. Neon, Supabase, Vercel Postgres)
-NEXTAUTH_SECRET           # Generera: openssl rand -base64 32
-NEXTAUTH_URL              # http://localhost:3000 (dev) / produktions-URL (prod)
-STRIPE_SECRET_KEY         # sk_test_... (dev) / sk_live_... (prod)
-NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY
-STRIPE_WEBHOOK_SECRET
-APP_ENCRYPTION_KEY        # Generera: openssl rand -base64 32 (måste vara 32 byte)
-```
-
-**Databas saknas än:** Inget DATABASE_URL är konfigurerat. För att sätta upp:
-```bash
-cp .env.example .env
-# Fyll i DATABASE_URL
-npm run db:push   # skapar tabeller
-npm run db:seed   # fyller med produkter + adminkonto
-```
-
-Dev-admin efter seed: `admin@shopen.se` / `admin1234`
-
----
-
-## Nästa session — fortsätt med Fas 2
-
-Börja nytt kontext med:
-> "Fortsätt med Fas 2 (Produktkatalog) enligt PROJECT_STATE.md. Läs den filen först."
-
-### Fas 2 ska innehålla:
-1. `/produkter` — produktlistsida med filter (kategori, prisintervall, sortering)
-2. `/produkt/[slug]` — produktdetaljsida med "Lägg i varukorg"-knapp
-3. `/kategori/[slug]` — kategorisida
-4. `/sok?q=...` — sökresultat
-5. `/admin/produkter` — admin: lista, lägg till, redigera, inaktivera produkter (skyddas av admin-roll)
-6. API route: `GET /api/products`, `POST /api/admin/products`, `PATCH /api/admin/products/[id]`
-
-### Komponenter att bygga i Fas 2:
-- `ProductGrid` — återanvändbart grid
-- `ProductFilter` — kategori/pris-filter (client component)
-- `SearchResults` — sökresultat med debounce
-- `AdminProductForm` — formulär för ny/redigera produkt
-- `AddToCartButton` — client component (förbereder för Fas 3)
-
----
-
-## Säkerhetsprinciper att hålla
-
-- Kortdata → Stripe, aldrig vår server
-- Lösenord → bcryptjs (cost factor 12 minimum)
-- Känsliga personuppgifter → `lib/crypto.ts` encrypt() innan db-lagring
-- API-routes → validera input med zod
-- Admin-routes → kontrollera `session.user.role === "ADMIN"` serverside
-- Miljövariabler → aldrig committa `.env`, alltid `.env.example`
+Därefter: Fas 3 (varukorg + konton), Fas 4 (Stripe-kassa), Fas 5 (säkerhetshärdning),
+Fas 6 (deployment).

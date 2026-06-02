@@ -3,6 +3,7 @@ import "./globals.css";
 import { SiteHeader } from "@/components/SiteHeader";
 import { SiteFooter } from "@/components/SiteFooter";
 import { CookieConsent } from "@/components/CookieConsent";
+import { CartProvider } from "@/components/CartProvider";
 
 export const metadata: Metadata = {
   title: "Shopen – Din webbutik",
@@ -16,10 +17,12 @@ export default function RootLayout({
   return (
     <html lang="sv">
       <body className="min-h-screen flex flex-col bg-white text-brand antialiased">
-        <SiteHeader />
-        <main className="flex-1">{children}</main>
-        <SiteFooter />
-        <CookieConsent />
+        <CartProvider>
+          <SiteHeader />
+          <main className="flex-1">{children}</main>
+          <SiteFooter />
+          <CookieConsent />
+        </CartProvider>
       </body>
     </html>
   );

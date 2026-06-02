@@ -1,4 +1,5 @@
 import Link from "next/link";
+import { CartLink } from "@/components/CartLink";
 
 // Sidhuvud med logotyp, sök och navigation. Återanvänder känslan från den
 // ursprungliga designen men i en återanvändbar komponent.
@@ -24,9 +25,7 @@ export function SiteHeader() {
           <Link href="/produkter" className="hover:text-brand-accent">
             Produkter
           </Link>
-          <Link href="/varukorg" className="hover:text-brand-accent">
-            Varukorg
-          </Link>
+          <CartLink />
           <Link href="/konto" className="hover:text-brand-accent">
             Mitt konto
           </Link>

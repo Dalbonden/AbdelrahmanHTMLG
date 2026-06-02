@@ -56,8 +56,13 @@ export function SiteFooter() {
           </ul>
         </div>
       </div>
-      <div className="border-t border-gray-200 py-4 text-center text-xs text-brand-muted">
-        © {new Date().getFullYear()} Shopen
+      <div className="border-t border-gray-200 px-4 py-4 text-center text-xs text-brand-muted">
+        <div className="flex flex-wrap justify-center gap-x-4 gap-y-1">
+          <span>© {new Date().getFullYear()} Shopen</span>
+          <Link href="/integritetspolicy" className="hover:text-brand hover:underline">Integritetspolicy</Link>
+          <Link href="/kopvillkor" className="hover:text-brand hover:underline">Köpvillkor</Link>
+          <Link href="/cookies" className="hover:text-brand hover:underline">Cookiepolicy</Link>
+        </div>
       </div>
     </footer>
   );

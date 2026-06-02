@@ -1,9 +1,17 @@
 import Link from "next/link";
 import { CartLink } from "@/components/CartLink";
+import { getCurrentUser } from "@/lib/auth";
 
-// Sidhuvud med logotyp, sök och navigation. Återanvänder känslan från den
-// ursprungliga designen men i en återanvändbar komponent.
-export function SiteHeader() {
+// Sidhuvud med logotyp, sök och navigation. Visar "Mitt konto" om inloggad,
+// annars "Logga in". Server component – läser sessionen direkt.
+export async function SiteHeader() {
+  let user = null;
+  try {
+    user = await getCurrentUser();
+  } catch {
+    user = null;
+  }
+
   return (
     <header className="border-b border-gray-200">
       <div className="mx-auto flex max-w-6xl flex-col gap-4 px-4 py-4 sm:flex-row sm:items-center sm:justify-between">
@@ -26,9 +34,15 @@ export function SiteHeader() {
             Produkter
           </Link>
           <CartLink />
-          <Link href="/konto" className="hover:text-brand-accent">
-            Mitt konto
-          </Link>
+          {user ? (
+            <Link href="/konto" className="hover:text-brand-accent">
+              Mitt konto
+            </Link>
+          ) : (
+            <Link href="/logga-in" className="hover:text-brand-accent">
+              Logga in
+            </Link>
+          )}
         </nav>
       </div>
     </header>

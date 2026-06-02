@@ -5,6 +5,7 @@ import { NextResponse } from "next/server";
 import { z } from "zod";
 import { prisma } from "@/lib/prisma";
 import { stripe, isStripeConfigured } from "@/lib/stripe";
+import { getCurrentUser } from "@/lib/auth";
 
 const checkoutSchema = z.object({
   items: z
@@ -78,21 +79,24 @@ export async function POST(request: Request) {
     0
   );
 
+  // Inloggad användare kopplas till ordern; annars används ett gästkonto.
+  const currentUser = await getCurrentUser();
+
   // Skapa order (PENDING) – kopplas senare till betalning via webhook
   const order = await prisma.order.create({
     data: {
-      // Gästköp: knyts till en användare först när konton finns (Fas 3).
-      // Tills dess används ett platshållar-gästkonto.
-      user: {
-        connectOrCreate: {
-          where: { email: "gast@shopen.se" },
-          create: {
-            email: "gast@shopen.se",
-            name: "Gäst",
-            passwordHash: "-", // gästkonto, ej inloggningsbart
+      user: currentUser
+        ? { connect: { id: currentUser.id } }
+        : {
+            connectOrCreate: {
+              where: { email: "gast@shopen.se" },
+              create: {
+                email: "gast@shopen.se",
+                name: "Gäst",
+                passwordHash: "-", // gästkonto, ej inloggningsbart
+              },
+            },
           },
-        },
-      },
       status: "PENDING",
       totalCents,
       currency: "SEK",

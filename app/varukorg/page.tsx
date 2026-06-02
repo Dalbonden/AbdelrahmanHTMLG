@@ -1,5 +1,6 @@
 "use client";
 
+import { useState } from "react";
 import Image from "next/image";
 import Link from "next/link";
 import { useCart } from "@/components/CartProvider";
@@ -7,6 +8,33 @@ import { formatPrice } from "@/lib/money";
 
 export default function VarukorgPage() {
   const { items, updateQuantity, removeItem, totalCents, ready } = useCart();
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+
+  async function handleCheckout() {
+    setLoading(true);
+    setError(null);
+    try {
+      const res = await fetch("/api/checkout", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          items: items.map((i) => ({ productId: i.productId, quantity: i.quantity })),
+        }),
+      });
+      const data = await res.json();
+      if (!res.ok) {
+        setError(data.error ?? "Något gick fel. Försök igen.");
+        return;
+      }
+      // Skicka kunden vidare till Stripe Checkout
+      if (data.url) window.location.href = data.url;
+    } catch {
+      setError("Kunde inte nå betaltjänsten. Försök igen.");
+    } finally {
+      setLoading(false);
+    }
+  }
 
   if (!ready) {
     return (
@@ -108,13 +136,17 @@ export default function VarukorgPage() {
         </div>
 
         <button
-          className="mt-6 w-full rounded-md bg-brand px-6 py-3 font-semibold text-white transition hover:opacity-90"
-          onClick={() => alert("Kassa med Stripe byggs i nästa steg (Fas 4).")}
+          onClick={handleCheckout}
+          disabled={loading}
+          className="mt-6 w-full rounded-md bg-brand px-6 py-3 font-semibold text-white transition hover:opacity-90 disabled:cursor-not-allowed disabled:opacity-60"
         >
-          Till kassan
+          {loading ? "Tar dig till kassan…" : "Till kassan"}
         </button>
+        {error && (
+          <p className="mt-2 text-center text-sm text-brand-accent">{error}</p>
+        )}
         <p className="mt-2 text-center text-xs text-brand-muted">
-          Säker betalning via Stripe (byggs i Fas 4).
+          Säker betalning via Stripe. Kortuppgifter hanteras av Stripe och rör aldrig vår server.
         </p>
       </div>
     </div>
